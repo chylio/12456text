@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>課程報名系統</title>
+    
+    <!-- 引入 Google Font (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- 1. 基本設定與背景 --- */
+        :root {
+            /* 迪士尼/數位風格色票 */
+            --color-bg-start: #f0f9ff;  /* 亮藍 */
+            --color-bg-mid1: #cbebff; /* 天空藍 */
+            --color-bg-mid2: #a1d9ff; /* 迪士尼藍 */
+            --color-bg-end: #fbc2eb;    /* 亮粉紅 */
+            
+            --color-glass-bg: rgba(255, 255, 255, 0.35); /* 玻璃背景 */
+            --color-glass-border: rgba(255, 255, 255, 0.18);
+            --color-text-primary: #1a202c;
+            --color-text-secondary: #4a5568;
+            --color-primary: #007bff;
+            --color-primary-hover: #0056b3;
+            --color-success: #28a745;
+            --color-error: #dc3545;
+            --color-shadow: rgba(31, 38, 135, 0.15);
+        }
+
+        body {
+            /* 使用 Noto Sans TC 作為中文字體, Inter 為英數 */
+            font-family: 'Inter', 'Noto Sans TC', "Microsoft JhengHei", "微軟正黑體", sans-serif;
+            margin: 0;
+            padding: 2.5rem 1.5rem; /* 增加上下間距 */
+            min-height: 100vh;
+            box-sizing: border-box;
+
+            /* 動態漸層背景 (迪士尼/數位風格) */
+            background: linear-gradient(130deg, 
+                var(--color-bg-start) 0%, 
+                var(--color-bg-mid1) 30%, 
+                var(--color-bg-mid2) 60%, 
+                var(--color-bg-end) 100%);
+            background-size: 200% 200%;
+            animation: gradient-animation 20s ease infinite;
+
+            /* 響應式置中 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 背景動畫 */
+        @keyframes gradient-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* --- 2. 倒數計時器 & 名額 --- */
+        .header-info {
+            width: 100%;
+            max-width: 700px;
+            margin-bottom: 1.5rem;
+        }
+
+        #countdown-timer {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+            background: rgba(0, 0, 0, 0.2);
+            padding: 0.75rem 1.25rem;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        #quota-counters {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .quota-item {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            flex-grow: 1;
+        }
+
+        .quota-item span {
+            display: block;
+            font-size: 1.5rem; /* 放大數字 */
+            font-weight: 700;
+            color: var(--color-primary-hover);
+            margin-top: 0.25rem;
+        }
+
+        /* --- 3. 表單卡片 (Liquid Glass) --- */
+        .form-card {
+            width: 100%;
+            max-width: 700px; /* 加寬表單 */
+            
+            /* Liquid Glass (玻璃擬態) 效果 */
+            background: var(--color-glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px); /* Safari 支援 */
+            border-radius: 20px;
+            border: 1px solid var(--color-glass-border);
+            box-shadow: 0 8px 32px 0 var(--color-shadow);
+            
+            padding: 2.5rem;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: var(--color-text-primary);
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 2rem;
+            font-weight: 700;
+        }
+
+        /* --- 4. 表單欄位 --- */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* 左右分欄 */
+            gap: 1.25rem;
+        }
+
+        .form-group {
+            margin-bottom: 0; /* grid gap 會處理間距 */
+        }
+
+        /* 跨欄位 */
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input[type="text"],
+        input[type="tel"] {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.7);
+        }
+
+        input:focus {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 8px rgba(0,123,255,0.3);
+            outline: none;
+            background: white;
+        }
+        
+        /* 課程選項 */
+        fieldset {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 0.5rem; /* 微調 */
+        }
+
+        legend {
+            font-weight: 600;
+            color: #333;
+            padding: 0 0.5rem;
+        }
+
+        .radio-group {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 1rem;
+            padding-top: 0.5rem;
+        }
+
+        .radio-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .radio-label input {
+            margin-right: 0.5rem;
+            transform: scale(1.1);
+        }
+
+        /* --- 5. 按鈕 & 訊息 --- */
+        button[type="submit"] {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+        }
+
+        button:disabled {
+            background: #aaa;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        #message-area {
+            margin-top: 1.5rem;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 600;
+            min-height: 1.5rem; /* 避免跳動 */
+        }
+
+        .success { color: var(--color-success); }
+        .error { color: var(--color-error); }
+
+        /* --- 6. 載入中動畫 --- */
+        .loader {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.5);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        .hidden { display: none; }
+        
+        /* 讓按鈕內的 loader 置中 */
+        button[type="submit"] {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* --- 7. 響應式設計 --- */
+        @media (max-width: 640px) {
+            body {
+                padding: 1.5rem 1rem;
+            }
+            .form-card {
+                padding: 1.5rem;
+            }
+            .form-grid {
+                grid-template-columns: 1fr; /* 單欄 */
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+            #countdown-timer {
+                font-size: 1.1rem;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- 頂部資訊：倒數 & 名額 -->
+    <div class="header-info">
+        <div id="countdown-timer">報名截止倒數：載入中...</div>
+        
+        <div id="quota-counters">
+            <div class="quota-item">A 簡報<span id="quota-A">10</span></div>
+            <div class="quota-item">B 影片<span id="quota-B">10</span></div>
+            <div class="quota-item">C 研究<span id="quota-C">10</span></div>
+        </div>
+    </div>
+
+    <!-- 報名表單卡片 -->
+    <div class="form-card">
+        <h1>課程報名系統</h1>
+
+        <form id="registration-form">
+            <div class="form-grid">
+                <!-- 姓名 -->
+                <div class="form-group">
+                    <label for="姓名">姓名</label>
+                    <input type="text" id="姓名" name="姓名" required>
+                </div>
+
+                <!-- 電話 -->
+                <div class="form-group">
+                    <label for="電話">電話</label>
+                    <input type="tel" id="電話" name="電話" required>
+                </div>
+
+                <!-- 單位 -->
+                <div class="form-group">
+                    <label for="單位">單位</label>
+                    <input type="text" id="單位" name="單位">
+                </div>
+                
+                <!-- 職稱 -->
+                <div class="form-group">
+                    <label for="職稱">職稱</label>
+                    <input type="text" id="職稱" name="職稱">
+                </div>
+
+                <!-- 醫院 -->
+                <div class="form-group full-width">
+                    <label for="醫院">醫院</label>
+                    <input type="text" id="醫院" name="醫院" required>
+                </div>
+
+                <!-- 課程選項 -->
+                <div class="form-group full-width">
+                    <fieldset>
+                        <legend>課程選項</legend>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="課程選項" value="A簡報" required> A簡報
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="課程選項" value="B影片"> B影片
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="課程選項" value="C研究"> C研究
+                            </label>
+                        </div>
+                    </fieldset>
+                </div>
+
+            </div>
+
+            <!-- 訊息區域 -->
+            <div id="message-area"></div>
+
+            <!-- 提交按鈕 -->
+            <button type="submit" id="submit-button" class="full-width" style="margin-top: 1.5rem;">
+                <div id="loader" class="loader hidden"></div>
+                <span id="button-text">立即報名</span>
+            </button>
+            
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- 1. 常數與元素 ---
+            const GAS_URL = 'https://script.google.com/macros/s/AKfycbyViW9fwWzw_6KGQdWBsBFfCGzcNQKCXsI5fGRmLkioDajPgAOKjBxWvDL93ctiRvpdlw/exec'; // <--- 請替換成您的 Google Apps Script URL
+            const DEADLINE = new Date('2025-12-01T00:00:00'); // 截止日期
+
+            const form = document.getElementById('registration-form');
+            const submitButton = document.getElementById('submit-button');
+            const buttonText = document.getElementById('button-text');
+            const loader = document.getElementById('loader');
+            const messageArea = document.getElementById('message-area');
+            const countdownEl = document.getElementById('countdown-timer');
+
+            // 名額計數器元素
+            const quotaSpans = {
+                'A簡報': document.getElementById('quota-A'),
+                'B影片': document.getElementById('quota-B'),
+                'C研究': document.getElementById('quota-C')
+            };
+
+            // 注意：這個名額是【前端演示用】，真實的名額控制應由 Google Apps Script 後端處理
+            let clientSideQuotas = {
+                'A簡報': 10,
+                'B影片': 10,
+                'C研究': 10
+            };
+
+            // --- 2. 倒數計時器 ---
+            function updateCountdown() {
+                const now = new Date();
+                const diff = DEADLINE - now;
+
+                if (diff <= 0) {
+                    countdownEl.textContent = '報名已截止';
+                    form.reset();
+                    submitButton.disabled = true;
+                    buttonText.textContent = '報名已截止';
+                    return;
+                }
+
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+                const minutes = Math.floor((diff / 1000 / 60) % 60);
+                const seconds = Math.floor((diff / 1000) % 60);
+
+                countdownEl.textContent = `報名截止倒數：${days} 天 ${hours} 時 ${minutes} 分 ${seconds} 秒`;
+            }
+
+            // 立即啟動並每秒更新
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+
+            // --- 3. 表單提交處理 ---
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault(); // 防止表單傳統提交
+
+                // 檢查 GAS URL
+                if (GAS_URL === 'PUT_YOUR_GAS_URL_HERE') {
+                    showMessage('請先在 JavaScript 中設置 Google Apps Script URL', 'error');
+                    return;
+                }
+
+                // 啟動載入狀態
+                setLoading(true);
+
+                // 獲取表單數據
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+                
+                // 檢查前端名額 (僅為演示)
+                const selectedCourse = data['課程選項'];
+                if (clientSideQuotas[selectedCourse] <= 0) {
+                    showMessage(`抱歉，${selectedCourse} 已額滿`, 'error');
+                    setLoading(false);
+                    return;
+                }
+
+                try {
+                    // **【關鍵】使用 'text/plain' 傳送 JSON 字串以避免 CORS preflight
+                    const response = await fetch(GAS_URL, {
+                        method: 'POST',
+                        mode: 'cors', // 保持 cors 模式以嘗試讀取回應
+                        headers: {
+                            // 使用 text/plain 來繞過 CORS 預檢請求
+                            'Content-Type': 'text/plain', 
+                        },
+                        body: JSON.stringify(data), // 將 JSON 物件轉為字串
+                        redirect: 'follow'
+                    });
+
+                    // 嘗試解析 GAS 回傳的 JSON (假設 GAS 已設定為回傳 JSON)
+                    const result = await response.json();
+
+                    if (result.status === 'success') {
+                        showMessage('報名成功！感謝您的參與。', 'success');
+                        
+                        // 更新前端名額顯示
+                        clientSideQuotas[selectedCourse]--;
+                        quotaSpans[selectedCourse].textContent = clientSideQuotas[selectedCourse];
+                        
+                        form.reset(); // 清空表單
+                    } else {
+                        // 處理 GAS 回傳的錯誤
+                        showMessage(`報名失敗：${result.message || '後端發生錯誤'}`, 'error');
+                    }
+
+                } catch (error) {
+                    console.error('Fetch Error:', error);
+                    // 網路錯誤或 GAS 回應非 JSON
+                    // 由於 'text/plain' 請求可能收到不透明(opaque)回應，
+                    // 某些 CORS 錯誤會在這裡被捕獲。
+                    // 提示一個通用訊息。
+                    showMessage('提交失敗，請檢查網路或聯繫管理員。', 'error');
+                } finally {
+                    // 結束載入狀態
+                    setLoading(false);
+                }
+            });
+
+            // --- 4. 輔助函式 ---
+            function setLoading(isLoading) {
+                if (isLoading) {
+                    submitButton.disabled = true;
+                    loader.classList.remove('hidden');
+                    buttonText.textContent = '傳送中...';
+                    messageArea.textContent = '';
+                } else {
+                    submitButton.disabled = false;
+                    loader.classList.add('hidden');
+                    buttonText.textContent = '立即報名';
+                }
+            }
+
+            function showMessage(message, type = 'info') {
+                messageArea.textContent = message;
+                messageArea.className = type; // 'success' 或 'error'
+            }
+        });
+    </script>
+</body>
+</html>
